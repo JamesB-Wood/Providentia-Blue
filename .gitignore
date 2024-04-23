@@ -57,3 +57,6 @@ build/
 bootloader/
 modules/
 .DS_Store
+
+#dashboard python files 
+__pycache__/
