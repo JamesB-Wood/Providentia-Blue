@@ -1,0 +1,28 @@
+<div class="graph" hx-get="/graph" hx-swap="outerHTML" hx-trigger="every 2s">
+    {% if graph_data %}
+    <H1>Graph data</H1>
+    <canvas id="myChart"></canvas>
+    <script>
+        var xValues = [0, 1, 2, 3, 4, 5, 6];
+        new Chart("myChart", {
+            type: 'line',
+            data: {
+                labels: xValues,
+                datasets: [
+                    {% for sensor in graph_data %}
+                    {
+                label: '{{ sensor.label }}',
+                fill: false,
+                borderColor: '{{sensor.color}}',
+                data: {{ sensor.data }}
+                    },
+            {% endfor %}
+                ]
+                },
+            options: {
+            } 
+            }
+        );
+    </script>
+    {% endif %}
+</div>

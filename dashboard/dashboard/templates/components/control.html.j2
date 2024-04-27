@@ -1,26 +1,18 @@
 <div class="sensors" hx-get="/sensors" hx-swap="outerHTML" hx-trigger="every 2s"> 
     {% if sensor_data %}
-    <h1>Sensor Readings</h1>
+    <h1>Flower State</h1>
     <table>
         <tr>
-            <th>TVOC:</th>
+            <th>Petals:</th>
             <td>{{sensor_data.TVOC}} ppm</td>
         </tr>
         <tr>
-            <th>CO₂:</th>
+            <th>Color:</th>
             <td>{{sensor_data.CO2}} ppm</td>
         </tr>
         <tr>
-            <th>Humidity:</th>
+            <th>Flashing:</th>
             <td>{{sensor_data.Humidity}}%</td>
-        </tr>
-        <tr>
-            <th>Temp:</th>
-            <td>{{sensor_data.Temp}}°C</td>
-        </tr>
-        <tr>
-            <th>Light:</th>
-            <td>{{sensor_data.Light}} Lux</td>
         </tr>
     </table>
     {% endif %}

@@ -1,8 +1,9 @@
 from queue import Queue
+from collections import deque
 import serial
 import json
 
-def run_uart(data_queue: Queue, uart_queue: Queue, json_queue: Queue, info_queue: Queue, port: str):
+def start_sensor_thread(data_queue: deque, uart_queue: Queue, json_queue: Queue, info_queue: Queue, port: str):
     """
     UART thread for reading and writing
     """
@@ -27,15 +28,3 @@ def run_uart(data_queue: Queue, uart_queue: Queue, json_queue: Queue, info_queue
             continue
         data = json.loads(line.decode())
         json_queue.put(data)
-        
-        #convert rssi to distance
-        dist_arr = []
-        for rssi in data:
-            distance = 1000 #base value to ignore
-            if rssi != None:
-                #may want to change 0
-                distance = 10**((-60-rssi)/(10*2))
-                distance = 5.5 if distance > 5.5 else distance
-                distance = 0 if distance < 0 else distance
-            dist_arr.append(distance)
-        data_queue.put(dist_arr)

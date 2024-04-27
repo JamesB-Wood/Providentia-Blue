@@ -23,12 +23,13 @@ def start_tracking_thread(queue: deque):
 
         queue.append(text)
 
+        #debug show
         cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
 
-        left_pupil = gaze.pupil_left_coords()
-        right_pupil = gaze.pupil_right_coords()
+        gaze.pupil_left_coords()
+        gaze.pupil_right_coords()
 
-        cv2.imshow("Demo", frame)
+        cv2.imshow("Debug", frame)
 
         if cv2.waitKey(1) == 27:
             break

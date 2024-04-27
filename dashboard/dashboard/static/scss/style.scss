@@ -13,6 +13,16 @@ body {
     color: white;
 }
 
+h1{
+    font-size: 50px;
+}
+
+.data {
+    width: 25%;
+    margin-right: 50px;
+}
+
 @import './clock.scss';
 @import './sensors.scss';
 @import './eye-track.scss';
+@import './graph.scss';

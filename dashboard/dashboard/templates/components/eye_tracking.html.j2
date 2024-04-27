@@ -1,13 +1,19 @@
 <div class="eye-tracking" hx-get="/eye-track" hx-swap="outerHTML" hx-trigger="every 1s"> 
-    <h1>Sensor Readings</h1>
+    {% if eye_data %}
+    <h1>Eye Tracking</h1>
     <table>
         <tr>
             <th>Status:</th>
             <td>{{eye_data.status}}</td>
         </tr>
         <tr>
-            <th>Time in state:</th>
+            <th>Time:</th>
             <td>{{'%0.2f'| format(eye_data.time)}}s</td>
         </tr>
+        <tr>
+            <th>Timeout:</th>
+            <td>{{'%0.2f'| format(eye_data.time_left)}}s</td>
+        </tr>
     </table>
+    {% endif %}
 </div>

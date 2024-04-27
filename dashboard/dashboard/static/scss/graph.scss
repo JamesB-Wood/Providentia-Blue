@@ -1,0 +1,16 @@
+$bg-color: #070F2B !default;
+$secondary-color: #1B1A55 !default;
+$tertiary-color: #535C91 !default;
+$accent-color: #9290C3 !default;
+
+.graph {
+    
+    canvas{
+        max-width: 800px;
+        min-width: 800px;
+        height: 400px;
+        background-color: white;
+        padding: 10px;
+        border-radius: 25px;
+    }
+}

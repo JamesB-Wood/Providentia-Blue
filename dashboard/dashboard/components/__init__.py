@@ -1,2 +1,2 @@
 from dashboard.components.eye_tracking import *
-from dashboard.components.uart import *
+from dashboard.components.sensors import *

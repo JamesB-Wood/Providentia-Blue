@@ -5,14 +5,20 @@
     <title>My Webpage</title>
     
     <script src="../static/htmx.js"></script>
+    <script  src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 
     <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
     {{clock()}}
-    <div>
-        {% include "./components/sensors.html.j2" %}
-        {% include "./components/eye_tracking.html.j2" %}
+    <div style="display: flex;">
+        <div class="data">
+            {% include "./components/sensors.html.j2" %}
+            {% include "./components/eye_tracking.html.j2" %}
+        </div>
+        <div>
+            {% include "./components/graph.html.j2" %}
+        </div>
     </div>
 </body>
 </html>
