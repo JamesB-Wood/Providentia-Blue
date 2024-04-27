@@ -60,3 +60,4 @@ modules/
 
 #dashboard python files 
 __pycache__/
+.vscode/
