@@ -1,0 +1,25 @@
+<div class="sensors" hx-get="/sensors" hx-swap="outerHTML" hx-trigger="every 2s"> 
+    <h1>Sensor Readings</h1>
+    <table>
+        <tr>
+            <th>TVOC:</th>
+            <td>{{sensor_data.TVOC}} ppm</td>
+        </tr>
+        <tr>
+            <th>CO₂:</th>
+            <td>{{sensor_data.CO2}} ppm</td>
+        </tr>
+        <tr>
+            <th>Humidity:</th>
+            <td>{{sensor_data.Humidity}}%</td>
+        </tr>
+        <tr>
+            <th>Temp:</th>
+            <td>{{sensor_data.Temp}}°C</td>
+        </tr>
+        <tr>
+            <th>Light:</th>
+            <td>{{sensor_data.Light}} Lux</td>
+        </tr>
+    </table>
+</div>

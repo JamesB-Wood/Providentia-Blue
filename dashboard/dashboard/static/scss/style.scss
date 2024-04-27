@@ -13,6 +13,6 @@ body {
     color: white;
 }
 
-// @import './calendar.scss';
-// @import './clock.scss';
-// @import './weather.scss';
+@import './clock.scss';
+@import './sensors.scss';
+@import './eye-track.scss';

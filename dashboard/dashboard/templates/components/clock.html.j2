@@ -1,0 +1,42 @@
+{% macro clock() -%}
+    <div class="clock"> 
+        <div class="date-holder">
+            <div class="date" id="day-name">XXX</div>
+            <div class="date" id="date">00</div>
+            <div class="date" id="month">XXX</div>
+            <div class="date" id="year">0000</div>
+        </div>
+        <div class="time-holder">
+            <div class="time" id="hours">HH</div>
+            <div>:</div>
+            <div class="time" id="minutes">MM</div>
+            <div class="seconds">.</div>
+            <div class="seconds" id="seconds">SS</div>
+            <div class="am-pm" id="am-pm"> AM</div>
+        </div>
+    </div>
+    <script>
+
+    //interval for chaning the time value of the clock element
+    setInterval(() => {
+        const currentdate = new Date(Date.now()); 
+
+        //handle update date
+        document.getElementById("day-name").innerHTML = currentdate.toLocaleDateString("en-AU", {"weekday" : "long"})
+        document.getElementById("date").innerHTML = currentdate.toLocaleDateString("en-AU", {"day" : "numeric"})
+        document.getElementById("month").innerHTML = currentdate.toLocaleDateString("en-AU", {"month" : "short"})
+        document.getElementById("year").innerHTML = currentdate.toLocaleDateString("en-AU", {"year" : "numeric"})
+
+        //handle update time
+        var hours = currentdate.getHours()
+        var unit = hours > 12 ? 'PM' : 'AM'
+        hours = hours > 12 ? hours - 12 : hours
+
+        document.getElementById("hours").innerHTML = hours
+        document.getElementById("minutes").innerHTML = String(currentdate.getMinutes()).padStart(2, '0')
+        document.getElementById("seconds").innerHTML = String(currentdate.getSeconds()).padStart(2, '0')
+        document.getElementById("am-pm").innerHTML = unit
+    }, 1000 )
+
+    </script>
+{%- endmacro %}

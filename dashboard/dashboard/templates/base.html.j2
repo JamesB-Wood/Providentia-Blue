@@ -1,3 +1,4 @@
+{% from "./components/clock.html.j2" import clock %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,8 +9,10 @@
     <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
-    <div style="display: flex;">
-    
+    {{clock()}}
+    <div>
+        {% include "./components/sensors.html.j2" %}
+        {% include "./components/eye_tracking.html.j2" %}
     </div>
 </body>
 </html>
