@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "providentia-blue-dashboard"
+name = "dashboard"
 version = "0.1.0"
 description = ""
 authors = ["James Wood <s4638772@student.uq.edu.au>"]
