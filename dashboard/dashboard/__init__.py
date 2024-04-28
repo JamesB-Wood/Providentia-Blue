@@ -57,12 +57,25 @@ def index():
 
     return render_template('base.html.j2', **context)
 
+
+@app.route('/flower-state')
+def get_flower_state():
+
+    flower_state = {
+        "brightness": 50,
+        "openness": 75,
+        "flashing": False,
+    }
+
+    return render_template('./components/flower_state.html.j2', flower_state=flower_state)
+
+
 last_state = ""
 state_start_time = 0
 @app.route('/eye-track')
 def get_eye_tracking():
     """
-    
+    Returns current state of the eye tracking as a compiled HTML element
     """
     global queues
     eye_track_queue = queues["eye_track_queue"]
@@ -106,7 +119,7 @@ import random
 @app.route('/graph-data')
 def get_graph():
     """
-    
+    Returns new information for the graph to use as JSON
     """
 
     graph_data = {
@@ -122,7 +135,7 @@ def get_graph():
 @app.route('/sensors')
 def get_sensors():
     """
-    
+    Returns current state of the sensors as a compile HTML element
     """
 
     sensor_data = {

@@ -1,0 +1,21 @@
+<div class="sensors" hx-get="/flower-state" hx-swap="outerHTML" hx-trigger="every 2s"> 
+    {% if flower_state %}
+    <h1>Flower State</h1>
+    <table>
+        <tr>
+            <th>Brightness:</th>
+            <td>{{flower_state.brightness}}% max brightness</td>
+        </tr>
+        <tr>
+            <th>Petals:</th>
+            <td>{{flower_state.openness}}% Open</td>
+        </tr>
+        <tr>
+            <th>Flashing:</th>
+            <td>{{flower_state.flashing}}</td>
+        </tr>
+    </table>
+    {% endif %}
+    <div class="buttons"> 
+    </div>
+</div>
