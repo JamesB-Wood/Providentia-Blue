@@ -10,7 +10,7 @@ import sass
 import os 
 
 # from app.components import *
-from dashboard.components import start_tracking_thread, start_sensor_thread
+from dashboard.components import start_tracking_thread, start_sensor_thread, INIT_GRAPH_DATA
 
 #global reference to all queues
 queues = {}
@@ -52,7 +52,7 @@ def index():
     sass.compile(dirname=(f'{path}/static/scss', f'{path}/static/css'), output_style='compressed')
 
     context = {
-
+        "graph_data": INIT_GRAPH_DATA
     }
 
     return render_template('base.html.j2', **context)
@@ -102,26 +102,22 @@ def get_eye_tracking():
 
     return render_template('./components/eye_tracking.html.j2', eye_data=eye_data)
 
-@app.route('/graph')
+import random
+@app.route('/graph-data')
 def get_graph():
     """
     
     """
 
-    graph_data = [
-        {
-            "label": "TVOC",
-            "data": [0,1,2,3,1,2,3],
-            "color": "red"
-        },
-        {
-            "label": "CO2",
-            "data": [2,2,2,3,3,3,3],
-            "color": "blue"
-        }
-    ]
+    graph_data = {
+        "TVOC": random.random() * 1000,
+        "CO2": random.random() * 1000,
+        "Humidity": random.random() * 100,
+        "Temp": random.random() * 40,
+        "Light": random.random() * 300,
+    }
 
-    return render_template('./components/graph.html.j2', graph_data=graph_data)
+    return graph_data
 
 @app.route('/sensors')
 def get_sensors():

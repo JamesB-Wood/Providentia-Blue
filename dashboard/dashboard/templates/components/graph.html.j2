@@ -1,28 +1,119 @@
-<div class="graph" hx-get="/graph" hx-swap="outerHTML" hx-trigger="every 2s">
-    {% if graph_data %}
+<div class="graph">
     <H1>Graph data</H1>
     <canvas id="myChart"></canvas>
     <script>
-        var xValues = [0, 1, 2, 3, 4, 5, 6];
-        new Chart("myChart", {
+        var xValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        const myLineChart = new Chart("myChart", {
             type: 'line',
             data: {
                 labels: xValues,
                 datasets: [
                     {% for sensor in graph_data %}
-                    {
-                label: '{{ sensor.label }}',
-                fill: false,
-                borderColor: '{{sensor.color}}',
-                data: {{ sensor.data }}
-                    },
-            {% endfor %}
+                        {
+                            label: '{{ sensor.label }}',
+                            fill: false,
+                            borderColor: '{{sensor.borderColor}}',
+                            data: {{ sensor.data }},
+                            yAxisID: '{{ sensor.yAxisID }}',
+                        },
+                    {% endfor %}
                 ]
                 },
-            options: {
+        options: {
+            scales: {
+                xAxes: [{
+                    ticks: {
+                        display: false //this will remove only the label
+                    }
+                }],
+                yAxes: [
+                    {   
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Ammount in Air (ppm)"
+                        },
+                        id: "y1",
+                        stacked: false,
+                        ticks: {
+                            max: 1000,
+                            min: 0,
+                        },
+                    },
+                    {
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Humidity (%)",                    
+                            fontColor: "green",
+                        },
+                        id: "y2",
+                        stacked: false,
+                        ticks: {
+                            max: 100,
+                            min: 0,
+                            fontColor: "green"
+                        },
+                        gridLines: {
+                            display: false,
+                        },
+                    },
+                    {
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Temperature (°C)",
+                            fontColor: "red",
+                        },
+                        id: "y3",
+                        position: "right",
+                        stacked: false,
+                        ticks: {
+                            max: 40,
+                            min: -10,
+                            fontColor: "red",
+                        },
+                        gridLines: {
+                            display: false,
+                        },
+                    },
+                    {
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Light intensity (LUX)",
+                            fontColor: "magenta",
+                        },
+                        id: "y4",
+                        position: "right",
+                        stacked: false,
+                        ticks: {
+                            max: 500,
+                            min: 0,
+                            fontColor: "magenta",
+                        },
+                        gridLines: {
+                            display: false,
+                        },
+                    },
+                ]
+                
+            }
             } 
             }
         );
+
+        //set graph update func
+        setInterval(() => {
+            const request = new Request("graph-data");
+            fetch(request)
+                .then((response) => response.json())
+                .then((json) => {
+
+                    myLineChart.data.datasets.forEach((dataset) => {
+                        dataset.data.shift();
+                        dataset.data.push(json[dataset.label]);
+                        console.log(json[dataset.label]);
+                    })
+                    myLineChart.update();
+                })
+
+        }, 2000)
     </script>
-    {% endif %}
 </div>
