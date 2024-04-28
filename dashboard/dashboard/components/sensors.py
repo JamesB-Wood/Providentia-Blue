@@ -1,5 +1,5 @@
-from queue import Queue
 from collections import deque
+from dataclasses import dataclass
 import serial
 import json
 
@@ -36,28 +36,54 @@ INIT_GRAPH_DATA = [
         }
     ]
 
-def start_sensor_thread(data_queue: deque, uart_queue: Queue, json_queue: Queue, info_queue: Queue, port: str):
+#Class for storing data with defaults
+@dataclass 
+class SensorState:
+    tvoc: int = 0
+    co2: int = 300
+    humidity: float = 50.4
+    temp: float = 24.5
+    lux: int = 200 
+
+
+flower_state = {
+        "brightness": 50,
+        "openness": 0,
+        "flashing": False,
+    }
+
+def calculate_flower_state(data_queue: deque[SensorState], command_queue: deque):
+
+    global flower_state
+
+    #perform filtering on the data 
+
+    #send command to queue if required
+
+    #return states
+    return flower_state
+
+def start_sensor_thread(data_queue: deque[SensorState], command_queue: deque, port: str):
     """
     UART thread for reading and writing
     """
+    # init data in data queue
+    data_queue.append(SensorState())
+    
     ser = serial.Serial(port, 115200, timeout=0.5)
     while True:
         #check if need to send anything 
-        if not uart_queue.empty():
-            to_send = uart_queue.get()
-            cmd = to_send[0]
+        while len(command_queue) != 0:
+            to_send = command_queue.popleft()
             to_send = to_send.encode('utf-8')
             ser.write(to_send)
 
-            #if view wait for response
-            if cmd == 'V':
-                line = ser.readline()
-                line = line.decode().replace(",", "\n")
-                info_queue.put(line)
-                # print(line)
-
         line = ser.readline()
+        
         if len(line) == 0:
             continue
-        data = json.loads(line.decode())
-        json_queue.put(data)
+        
+        json_data = json.loads(line.decode())
+
+        data = SensorState(json_data["TVOC"], json_data["CO2"], json_data["HUMID"], json_data["TEMP"], json_data["LUX"])
+        data_queue.append(data)
