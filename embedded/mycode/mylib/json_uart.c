@@ -19,7 +19,7 @@ K_MSGQ_DEFINE(uart_msgq, MSG_SIZE, 16, 1);
 static int rx_buf_pos = 0;
 static uint8_t rx_buf[MSG_SIZE] = {0};
 
-static const struct device *const my_uart = DEVICE_DT_GET(DT_NODELABEL(usart2));
+static const struct device *const my_uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
 
 // JSON Descriptor for sensor data
 struct json_obj_descr sens_data_descr[] = {
