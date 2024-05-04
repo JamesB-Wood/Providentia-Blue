@@ -27,7 +27,7 @@ struct json_obj_descr sens_data_descr[] = {
     JSON_OBJ_DESCR_PRIM(sensor_data_t, co2, JSON_TOK_NUMBER),
     JSON_OBJ_DESCR_PRIM(sensor_data_t, humidity, JSON_TOK_NUMBER),
     JSON_OBJ_DESCR_PRIM(sensor_data_t, temp, JSON_TOK_NUMBER),
-    JSON_OBJ_DESCR_PRIM(sensor_data_t, lux, JSON_TOK_NUMBER),
+    JSON_OBJ_DESCR_ARRAY_NAMED(sensor_data_t, "ir_grid", ir_grid.ir_grid_data, 64, ir_grid.grid_data_len, JSON_TOK_NUMBER),
 };
 
 // JSON Descriptor for control data
@@ -86,9 +86,10 @@ void send_uart_bytes(uint8_t *buf, int len) {
  *  @param data The data to be sent over UART
  */
 void send_sensor_data(sensor_data_t data) {
-    char buff[256];
+    char buff[512];
+    data.ir_grid.grid_data_len = 64;
     json_obj_encode_buf(sens_data_descr, 5, &data, buff, sizeof(buff));
-    send_uart_bytes(buff, strlen(buff)); // confirm this works
+    send_uart_bytes(buff, strlen(buff));
     uart_poll_out(my_uart, '\n');
 }
 

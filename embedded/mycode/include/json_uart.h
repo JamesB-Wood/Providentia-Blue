@@ -3,12 +3,22 @@
 
 #include <zephyr/kernel.h>
 
+
+struct ir_data {
+    int ir_grid_data[64]; // 10x degrees c e.g (16.5c --> 165)
+    size_t grid_data_len;
+};
+
 typedef struct {
     int tvoc; // in ppm
     int co2; // in ppm
     int humidity; // 1000x percentage e.g (50.5% --> 505)
     int temp; // 10x degrees c e.g (16.5c --> 165)
-    int lux; //may need to change 
+    struct {
+        int ir_grid_data[64]; // 10x degrees c e.g (16.5c --> 165)
+        size_t grid_data_len;
+    } ir_grid;
+    
 } sensor_data_t;
 
 typedef struct {
