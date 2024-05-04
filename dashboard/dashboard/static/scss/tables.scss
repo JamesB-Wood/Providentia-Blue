@@ -45,3 +45,25 @@ $accent-color: #9290C3 !default;
       }
     
 }
+
+.grid-data {
+    font-size: 14px;
+    justify-self: center;
+    align-content: center;
+
+    h1 {
+        font-size: 50px;
+        margin-bottom: 0px;
+    }
+
+    table {
+        margin: 0 auto;
+    }
+
+    td {
+        padding-left: 10px;
+        padding-top: 15px;
+        padding-bottom: 15px;
+        padding-right: 10px;
+    }
+}

@@ -5,34 +5,34 @@ import json
 
 INIT_GRAPH_DATA = [
     {
-        "label": "TVOC",
+        "label": "tvoc",
         "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         "borderColor": "blue",
         "yAxisID": "y1",
     },
     {
-        "label": "CO2",
+        "label": "co2",
         "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         "borderColor": "purple",
         "yAxisID": "y1",
     },
     {
-        "label": "Humidity",
+        "label": "humidity",
         "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         "borderColor": "green",
         "yAxisID": "y2",
     },
     {
-        "label": "Temp",
+        "label": "temp",
         "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         "borderColor": "red",
         "yAxisID": "y3",
     },
     {
-        "label": "Light",
+        "label": "average_ir_temp",
         "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         "borderColor": "magenta",
-        "yAxisID": "y4",
+        "yAxisID": "y3",
     },
 ]
 
@@ -40,41 +40,76 @@ INIT_GRAPH_DATA = [
 # Class for storing data with defaults
 @dataclass
 class SensorState:
+    ir_vals: list[float]
     tvoc: int = 0
     co2: int = 300
     humidity: float = 50.4
     temp: float = 24.5
-    lux: int = 200
+    average_ir_temp: float = 25.5
+
+    def as_dict(self) -> dict:
+        return {
+            "tvoc": self.tvoc,
+            "co2": self.co2,
+            "humidity": self.humidity,
+            "temp": self.temp,
+            "average_ir_temp": self.average_ir_temp,
+        }
 
 
-flower_state = {
-    "brightness": 50,
-    "openness": 0,
-    "flashing": False,
-}
+@dataclass
+class ControlState:
+    brightness: int = 50
+    openness: int = 100
+    flashing: bool = False
+
+    def to_json(self) -> str:
+        as_dict = {
+            "brightness": self.brightness,
+            "openness": self.openness,
+            "flashing": self.flashing,
+        }
+        return json.dumps(as_dict)
 
 
-def calculate_flower_state(data_queue: deque[SensorState], command_queue: deque):
+flower_state = ControlState()
+
+
+def calculate_flower_state(
+    data_queue: deque[SensorState], command_queue: deque[ControlState]
+):
 
     global flower_state
+    new_state = ControlState()
 
     # perform filtering on the data
 
     # send command to queue if required
-    json.dumps(flower_state).encode()
+    if new_state != flower_state:
+        command_queue.append(new_state)
+        flower_state = new_state
 
     # return states
     return flower_state
 
 
 def start_sensor_thread(
-    data_queue: deque[SensorState], command_queue: deque, port: str
+    data_queue: deque[SensorState], command_queue: deque[ControlState], port: str
 ):
     """
     UART thread for reading and writing
     """
     # init data in data queue
-    data_queue.append(SensorState())
+    data_queue.append(SensorState([
+        [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0,],
+        [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0,],
+        [15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0,],
+        [20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0,],
+        [25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0,],
+        [30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0,],
+        [35.0, 35.0, 35.0, 35.0, 35.0, 35.0, 35.0, 35.0,],
+        [40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0,],
+    ]))
 
     ser = serial.Serial(port, 115200, timeout=0.5)
     while True:
@@ -91,11 +126,18 @@ def start_sensor_thread(
 
         json_data = json.loads(line.decode())
 
+        grid_data = json_data["ir_grid"]
+        grid_data = [item/10 for item in grid_data] 
+        #split list into 2d 
+        grid_data = [grid_data[i:i + 8] for i in range(0, len(grid_data), 8)]
+
         data = SensorState(
-            json_data["TVOC"],
-            json_data["CO2"],
-            json_data["HUMID"],
-            json_data["TEMP"],
-            json_data["LUX"],
+            grid_data,
+            json_data["tvoc"],
+            json_data["co2"],
+            json_data["humidity"]/10,
+            json_data["temp"]/10,
+            sum(grid_data)/len(grid_data),
         )
         data_queue.append(data)
+        data_queue.popleft() #remove previous val

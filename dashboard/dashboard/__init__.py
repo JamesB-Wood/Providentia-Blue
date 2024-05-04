@@ -146,10 +146,6 @@ def get_eye_tracking():
 
     return render_template("./components/eye_tracking.html.j2", eye_data=eye_data)
 
-
-import random
-
-
 @app.route("/graph-data")
 def get_graph():
     """
@@ -158,17 +154,19 @@ def get_graph():
 
     global QUEUES
     sensor_data_queue: deque[SensorState] = QUEUES["sensor_data_queue"]
+    
+    return sensor_data_queue[-1].as_dict()
 
-    # get most recent dat from queue
-    graph_data = {
-        "TVOC": sensor_data_queue[-1].tvoc,
-        "CO2": sensor_data_queue[-1].co2,
-        "Humidity": sensor_data_queue[-1].humidity,
-        "Temp": sensor_data_queue[-1].temp,
-        "Light": sensor_data_queue[-1].lux,
-    }
+@app.route("/grid")
+def get_grid():
+    """
+    
+    """
 
-    return graph_data
+    global QUEUES
+    sensor_data_queue: deque[SensorState] = QUEUES["sensor_data_queue"]
+
+    return render_template("./components/grid.html.j2", grid_data=sensor_data_queue[-1].ir_vals)
 
 
 @app.route("/sensors")
@@ -180,13 +178,4 @@ def get_sensors():
     global QUEUES
     sensor_data_queue: deque[SensorState] = QUEUES["sensor_data_queue"]
 
-    # get most recent dat from queue
-    sensor_data = {
-        "TVOC": sensor_data_queue[-1].tvoc,
-        "CO2": sensor_data_queue[-1].co2,
-        "Humidity": sensor_data_queue[-1].humidity,
-        "Temp": sensor_data_queue[-1].temp,
-        "Light": sensor_data_queue[-1].lux,
-    }
-
-    return render_template("./components/sensors.html.j2", sensor_data=sensor_data)
+    return render_template("./components/sensors.html.j2", sensor_data=sensor_data_queue[-1])
