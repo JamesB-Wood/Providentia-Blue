@@ -190,9 +190,9 @@ static void process_hts221_sample(const struct device *dev)
 	/* display humidity */
 	printk("Relative Humidity:%.1f%%\n", hum_double);
 
-	update_temp_ibeacon((uint16_t)temp_double);
+	update_temp_ibeacon((uint16_t)(temp_double * 10));
 	k_msleep(100);
-	update_hum_ibeacon((uint16_t)hum_double);
+	update_hum_ibeacon((uint16_t)(hum_double * 10));
 }
 
 static void do_main(const struct device *dev, const struct device *dev1)
