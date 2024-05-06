@@ -14,6 +14,8 @@
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/hci.h>
 
+#include <json_uart.h>
+
 #define NODE_THINGY "EF:B9:B8:80:14:B7"
 
 #ifndef IBEACON_RSSI
@@ -22,47 +24,7 @@
 
 static struct bt_conn *default_conn;
 
-/*
- * Set iBeacon demo advertisement data. These values are for
- * demonstration only and must be changed for production environments!
- *
- * UUID:  18ee1516-016b-4bec-ad96-bcb96d166e97
- * Major: 0
- * Minor: 0
- * RSSI:  -56 dBm
- */
-static const struct bt_data ad[] = {
-	BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
-	BT_DATA_BYTES(BT_DATA_MANUFACTURER_DATA,
-		      0x4c, 0x00, /* Apple */
-		      0x02, 0x15, /* iBeacon */
-		      0x18, 0xee, 0x15, 0x16, /* UUID[15..12] */
-		      0x01, 0x6b, /* UUID[11..10] */
-		      0x4b, 0xec, /* UUID[9..8] */
-		      0xad, 0x96, /* UUID[7..6] */
-		      0xbc, 0xb9, 0x6d, 0x16, 0x6e, 0x97, /* UUID[5..0] */
-		      0x00, 0x00, /* Major */
-		      0x00, 0x00, /* Minor */
-		      IBEACON_RSSI) /* Calibrated RSSI @ 1m */
-};
-
-void update_adv_data(void) {
-	struct bt_data ad[] = {
-		BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
-		BT_DATA_BYTES(BT_DATA_MANUFACTURER_DATA, 0x4c, 0x00, /* Apple */
-					0x02, 0x15,                            /* iBeacon */
-					0x18, 0xee, 0x15, 0x16,                /* UUID[15..12] */
-					0x01, 0x6b,                            /* UUID[11..10] */
-					0x4b, 0xec,                            /* UUID[9..8] */
-					0xad, 0x96,                            /* UUID[7..6] */
-					0xbc, 0xb9, 0x6d, 0x16, 0x6e, 0x97,    /* UUID[5..0] */
-					0x41, 0x00,                            /* Major */
-					0x00, 0x00,                            /* Minor */
-					IBEACON_RSSI) /* Calibrated RSSI @ 1m */
-	};
-
-	bt_le_adv_update_data(ad, ARRAY_SIZE(ad), NULL, 0);
-}
+sensor_data_t sensor_data;
 
 static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 			 struct net_buf_simple *ad_rev)
@@ -79,32 +41,27 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 
 		if (ad_rev->data[25] == 0x63) {
 
-			printk("CO2 value: %u\n", ((ad_rev->data[27] << 8) | ad_rev->data[28]));
+			sensor_data.co2 = (ad_rev->data[27] << 8) | ad_rev->data[28];
+
+			printk("CO2 value: %u\n", sensor_data.co2);
 
 		} else if (ad_rev->data[25] == 0x54) {
 
-			printk("TVOC value: %u\n", ((ad_rev->data[27] << 8) | ad_rev->data[28]));
+			sensor_data.tvoc = (ad_rev->data[27] << 8) | ad_rev->data[28];
+
+			printk("TVOC value: %u\n", sensor_data.tvoc);
 
 		} else if (ad_rev->data[25] == 0x74) {
 
-			printk("Temp value: %u\n", ((ad_rev->data[27] << 8) | ad_rev->data[28]));
+			sensor_data.temp = (ad_rev->data[27] << 8) | ad_rev->data[28];
 
-            // uint16_t temp_raw = ((ad_rev->data[27] << 8) | ad_rev->data[28]);
-
-            // double temperature = (double)(temp_raw / 0xFFFF);
-
-            // printk("Temperature:%f C\n", temperature);
+			printk("Temp value: %u\n", sensor_data.temp);
 
 		} else if (ad_rev->data[25] == 0x68) {
 
-			printk("Hum value: %u\n", ((ad_rev->data[27] << 8) | ad_rev->data[28]));
+			sensor_data.humidity = (ad_rev->data[27] << 8) | ad_rev->data[28];
 
-			// uint16_t hum_raw = ((ad_rev->data[27] << 8) | ad_rev->data[28]);
-
-            // double humidity = (double)(hum_raw / 0xFFFF);
-
-            // printk("Relative Humidity:%.1f%%\n", humidity);
-
+			printk("Hum value: %u\n", sensor_data.humidity);
 		}
 	}
 }
@@ -126,19 +83,9 @@ int scan_adv_thread(void)
 		return 0;
 	}
 
-	printk("Bluetooth initialized\n");
-
 	err = bt_le_scan_start(&scan_param, device_found);
 	if (err) {
 		printk("Starting scanning failed (err %d)\n", err);
-		return 0;
-	}
-
-	/* Start advertising */
-	err = bt_le_adv_start(BT_LE_ADV_NCONN_IDENTITY, ad, ARRAY_SIZE(ad),
-					NULL, 0);
-	if (err) {
-		printk("Advertising failed to start (err %d)\n", err);
 		return 0;
 	}
 
