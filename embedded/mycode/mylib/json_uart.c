@@ -19,6 +19,10 @@ K_MSGQ_DEFINE(uart_msgq, MSG_SIZE, 16, 1);
 static int rx_buf_pos = 0;
 static uint8_t rx_buf[MSG_SIZE] = {0};
 
+// sensor data queue
+char sensor_queue_buffer[20 * sizeof(sensor_data_t)];
+struct k_msgq sensor_queue;
+
 static const struct device *const my_uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
 
 // JSON Descriptor for sensor data
@@ -91,6 +95,17 @@ void send_sensor_data(sensor_data_t data) {
     json_obj_encode_buf(sens_data_descr, 5, &data, buff, sizeof(buff));
     send_uart_bytes(buff, strlen(buff));
     uart_poll_out(my_uart, '\n');
+}
+
+int send_json_thread(void){
+    k_msgq_init(&sensor_queue, sensor_queue_buffer, sizeof(sensor_data_t),
+                20);
+
+    sensor_data_t data_buff;
+
+    while (k_msgq_get(&sensor_queue, &data_buff, K_FOREVER) == 0) {
+        send_sensor_data(data_buff);
+    }
 }
 
 /*

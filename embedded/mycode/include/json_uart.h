@@ -3,6 +3,8 @@
 
 #include <zephyr/kernel.h>
 
+//sensor queue struct
+extern struct k_msgq sensor_queue;
 
 struct ir_data {
     int ir_grid_data[64]; // 10x degrees c e.g (16.5c --> 165)
@@ -31,6 +33,11 @@ typedef struct {
  * Main thread for UART reading
  */
 int uart_thread(void);
+
+/* 
+ * Send the sensor data pulled from the sensor queue
+ */
+int send_json_thread(void);
 
 /*
  * Send the sensor data struct of UART 
