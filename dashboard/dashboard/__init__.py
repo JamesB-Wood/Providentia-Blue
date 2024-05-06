@@ -18,11 +18,9 @@ from dashboard.components import (
     SensorState,
 )
 
-
 QUEUES = {}  # global reference to all queues
-TIMEOUT = 60 * 1  # Global define for timeout = 1 minutes
+TIMEOUT = 60 * 0.2  # Global define for timeout = 1 minutes
 COMPORT = "COM5"
-
 
 def create_threads():
     # Make Queues
@@ -75,12 +73,14 @@ def index():
 
     return render_template("base.html.j2", **context)
 
+is_flashing = False
 
 @app.route("/flower-state")
 def get_flower_state():
+    global is_flashing
     global QUEUES
     flower_state = calculate_flower_state(
-        QUEUES["sensor_data_queue"], QUEUES["command_queue"]
+        QUEUES["sensor_data_queue"], QUEUES["command_queue"], is_flashing
     )
 
     return render_template(
@@ -90,8 +90,6 @@ def get_flower_state():
 
 last_state = ""
 state_start_time = 0
-is_flashing = False
-
 
 @app.route("/eye-track")
 def get_eye_tracking():
@@ -123,7 +121,7 @@ def get_eye_tracking():
                 last_state = eye_state
                 # stop flashing if we stop looking at screen
                 if eye_state != "Looking at Screen" and is_flashing:
-                    command_queue.append("flash off")
+                    is_flashing = False
 
     except IndexError:
         # ignore empty queues

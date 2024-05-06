@@ -55,6 +55,8 @@ class SensorState:
             "temp": self.temp,
             "average_ir_temp": self.average_ir_temp,
         }
+    def to_json(self) -> str:
+        return json.dumps(self.as_dict())
 
 
 @dataclass
@@ -75,18 +77,21 @@ class ControlState:
 flower_state = ControlState()
 
 
-def calculate_flower_state(
-    data_queue: deque[SensorState], command_queue: deque[ControlState]
+def calculate_flower_state (
+    data_queue: deque[SensorState], command_queue: deque[ControlState], is_flashing: bool
 ):
-
     global flower_state
     new_state = ControlState()
+    new_state.flashing = is_flashing
+
+    # brightness
+    new_state.brightness = max(0, round((1 - (abs(data_queue[-1].average_ir_temp - 31))/10) * 100))
 
     # perform filtering on the data
 
     # send command to queue if required
     if new_state != flower_state:
-        command_queue.append(new_state)
+        command_queue.append(new_state.to_json())
         flower_state = new_state
 
     # return states
@@ -127,17 +132,15 @@ def start_sensor_thread(
         json_data = json.loads(line.decode())
 
         grid_data = json_data["ir_grid"]
-        grid_data = [item/10 for item in grid_data] 
-        #split list into 2d 
-        grid_data = [grid_data[i:i + 8] for i in range(0, len(grid_data), 8)]
+        grid_data = [item/100 for item in grid_data] 
 
         data = SensorState(
-            grid_data,
-            json_data["tvoc"],
+            [grid_data[i:i + 8] for i in range(0, len(grid_data), 8)],
+            json_data["tvoc"]/1000,
             json_data["co2"],
             json_data["humidity"]/10,
             json_data["temp"]/10,
-            sum(grid_data)/len(grid_data),
+            round(sum(grid_data)/len(grid_data), 1),
         )
         data_queue.append(data)
         data_queue.popleft() #remove previous val
