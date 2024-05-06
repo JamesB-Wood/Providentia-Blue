@@ -37,7 +37,7 @@ int uart_thread(void);
 /* 
  * Send the sensor data pulled from the sensor queue
  */
-int send_json_thread(void);
+void send_json_thread(void);
 
 /*
  * Send the sensor data struct of UART 

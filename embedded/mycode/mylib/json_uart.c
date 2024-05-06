@@ -94,10 +94,11 @@ void send_sensor_data(sensor_data_t data) {
     data.ir_grid.grid_data_len = 64;
     json_obj_encode_buf(sens_data_descr, 5, &data, buff, sizeof(buff));
     send_uart_bytes(buff, strlen(buff));
+    uart_poll_out(my_uart, '\r');
     uart_poll_out(my_uart, '\n');
 }
 
-int send_json_thread(void){
+void send_json_thread(void){
     k_msgq_init(&sensor_queue, sensor_queue_buffer, sizeof(sensor_data_t),
                 20);
 
