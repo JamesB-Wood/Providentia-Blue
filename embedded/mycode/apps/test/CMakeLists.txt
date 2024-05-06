@@ -1,13 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.20.0)
-find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(base_nrf52840dk)
 
-file(GLOB MYLIB ../../mylib/scan_adv.c ../../mylib/json_uart.c)
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+project(prac1)
+
+file(GLOB MYLIB ../../mylib/*.c)
 
 include_directories(../../include/)
 
 target_sources(app PRIVATE src/main.c ${MYLIB})
-
-zephyr_library_include_directories(${ZEPHYR_BASE}/samples/bluetooth)

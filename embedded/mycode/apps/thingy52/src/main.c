@@ -109,6 +109,7 @@ static int process_ccs811_sample(const struct device *dev)
 		printk("\nCCS811: %u ppm eCO2; %u ppb eTVOC\n", co2.val1, tvoc.val1);
 
 		update_tvoc_ibeacon((uint16_t)sensor_value_to_double(&tvoc));
+		k_msleep(100);
 		update_co2_ibeacon((uint16_t)sensor_value_to_double(&co2));
 
 		if (app_fw_2 && !(rp->status & CCS811_STATUS_DATA_READY)) {
@@ -189,14 +190,16 @@ static void process_hts221_sample(const struct device *dev)
 	/* display humidity */
 	printk("Relative Humidity:%.1f%%\n", hum_double);
 
-	update_temp_ibeacon((uint16_t)temp_double);
-	update_hum_ibeacon((uint16_t)hum_double);
+	update_temp_ibeacon((uint16_t)(temp_double * 10));
+	k_msleep(100);
+	update_hum_ibeacon((uint16_t)(hum_double * 10));
 }
 
 static void do_main(const struct device *dev, const struct device *dev1)
 {
 	while (true) {
 		int rc = process_ccs811_sample(dev);
+		k_msleep(100);
 		process_hts221_sample(dev1);
 
 		if (rc == 0) {
@@ -207,7 +210,7 @@ static void do_main(const struct device *dev, const struct device *dev1)
 			printk("Timed fetch failed: %d\n", rc);
 			break;
 		}
-		k_msleep(300);
+		k_msleep(100);
 	}
 }
 
@@ -295,9 +298,9 @@ int main(void)
 {
 	enable_gpio();
 
-	enable_sensors();
-
 	enable_ibeacon();
+
+	enable_sensors();
 
 	return 0;
 }
