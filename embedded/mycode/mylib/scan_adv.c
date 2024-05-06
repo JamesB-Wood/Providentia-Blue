@@ -1,11 +1,3 @@
-/* main.c - Application main entry point */
-
-/*
- * Copyright (c) 2015-2016 Intel Corporation
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 #include <zephyr/types.h>
 #include <stddef.h>
 #include <zephyr/sys/printk.h>
@@ -16,6 +8,10 @@
 
 #include <json_uart.h>
 
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/sensor.h>
+
 #define NODE_THINGY "EF:B9:B8:80:14:B7"
 
 #ifndef IBEACON_RSSI
@@ -25,6 +21,12 @@
 static struct bt_conn *default_conn;
 
 sensor_data_t sensor_data;
+
+static struct sensor_value temp_value[64];
+
+const struct device *const dev = DEVICE_DT_GET_ONE(panasonic_amg88xx);
+
+int ret;
 
 static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 			 struct net_buf_simple *ad_rev)
@@ -43,26 +45,38 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 
 			sensor_data.co2 = (ad_rev->data[27] << 8) | ad_rev->data[28];
 
-			printk("CO2 value: %u\n", sensor_data.co2);
-
 		} else if (ad_rev->data[25] == 0x54) {
 
 			sensor_data.tvoc = (ad_rev->data[27] << 8) | ad_rev->data[28];
-
-			printk("TVOC value: %u\n", sensor_data.tvoc);
 
 		} else if (ad_rev->data[25] == 0x74) {
 
 			sensor_data.temp = (ad_rev->data[27] << 8) | ad_rev->data[28];
 
-			printk("Temp value: %u\n", sensor_data.temp);
-
 		} else if (ad_rev->data[25] == 0x68) {
 
 			sensor_data.humidity = (ad_rev->data[27] << 8) | ad_rev->data[28];
 
-			printk("Hum value: %u\n", sensor_data.humidity);
 		}
+
+		ret = sensor_sample_fetch(dev);
+		if (ret) {
+			printk("Failed to fetch a sample, %d\n", ret);
+			return;
+		}
+
+		ret = sensor_channel_get(dev, SENSOR_CHAN_AMBIENT_TEMP,
+					 (struct sensor_value *)temp_value);
+		if (ret) {
+			printk("Failed to get sensor values, %d\n", ret);
+			return;
+		}
+
+		for (int i = 0; i < 64; i++) {
+			sensor_data.ir_grid.ir_grid_data[i] = (temp_value[i].val1 * 100 + temp_value[i].val2 / 10000);
+		}
+
+		k_msgq_put(&sensor_queue, &sensor_data, K_NO_WAIT);
 	}
 }
 
@@ -86,6 +100,11 @@ int scan_adv_thread(void)
 	err = bt_le_scan_start(&scan_param, device_found);
 	if (err) {
 		printk("Starting scanning failed (err %d)\n", err);
+		return 0;
+	}
+
+	if (!device_is_ready(dev)) {
+		printk("sensor: device not ready.\n");
 		return 0;
 	}
 
