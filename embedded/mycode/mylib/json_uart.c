@@ -5,6 +5,11 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/kernel.h>
 
+#include <zephyr/types.h>
+#include <stddef.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/hci.h>
+
 /* ENSURE FOLLOWING SET IN K-CONFIG 
     CONFIG_SERIAL=y
     CONFIG_UART_INTERRUPT_DRIVEN=y
@@ -13,6 +18,10 @@
 
 // UART interrupt MSGQ setup
 #define MSG_SIZE 128
+
+#ifndef IBEACON_RSSI
+#define IBEACON_RSSI 0xc8
+#endif
 
 K_MSGQ_DEFINE(uart_msgq, MSG_SIZE, 16, 1);
 
@@ -135,6 +144,21 @@ int uart_thread(void) {
                        &control_data);
 
         //send data to Crikit Board...
+        struct bt_data ad[] = {
+            BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
+            BT_DATA_BYTES(BT_DATA_MANUFACTURER_DATA, 0x4c, 0x00, /* Apple */
+                        0x02, 0x15,                            /* iBeacon */
+                        0x18, 0xee, 0x15, 0x16,                /* UUID[15..12] */
+                        0x01, 0x6b,                            /* UUID[11..10] */
+                        0x4b, 0xec,                            /* UUID[9..8] */
+                        0xad, 0x96,                            /* UUID[7..6] */
+                        0xbc, 0xb9, 0x6d, 0x16, 0x6e, 0x97,    /* UUID[5..0] */
+                        0x21, control_data.brightness,                            /* Major */
+                        control_data.openness, control_data.flashing,                            /* Minor */
+                        IBEACON_RSSI) /* Calibrated RSSI @ 1m */
+        };
+
+        bt_le_adv_update_data(ad, ARRAY_SIZE(ad), NULL, 0);
     }
 
     return 0;

@@ -45,7 +45,7 @@ struct bt_data ad[] = {
                   0x4b, 0xec,                            /* UUID[9..8] */
                   0xad, 0x96,                            /* UUID[7..6] */
                   0xbc, 0xb9, 0x6d, 0x16, 0x6e, 0x97,    /* UUID[5..0] */
-                  0x00, 0x00,                            /* Major */
+                  0x21, 0x00,                            /* Major */
                   0x00, 0x00,                            /* Minor */
                   IBEACON_RSSI) /* Calibrated RSSI @ 1m */
 };
