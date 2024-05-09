@@ -75,6 +75,10 @@ int main(void)
 
 	uint8_t init_msg[2] = {0x00, 0x01};
 
+	error = i2c_write(i2c_dev, init_msg, 0, CRICKIT_ADDR);
+	error = i2c_write(i2c_dev, init_msg, 2, CRICKIT_ADDR);
+
+
 	uint8_t feq_msg[5] = {0x08, 0x02, 0x03, 0x00, 0x32};
 
 	uint16_t pwm_val = 1000;
