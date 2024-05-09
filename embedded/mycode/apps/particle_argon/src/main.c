@@ -73,13 +73,20 @@ int main(void)
 		return 0;
 	}
 
-	// uint8_t msg[3] = {CRICKIT_SERVO, (uint8_t)(freq >> 8), (uint8_t)freq};
-	uint8_t msg[5] = {0x08, 0x01, CRICKIT_SERVO, 0xE0, 0xFF};
+	uint8_t init_msg[2] = {0x00, 0x01};
+
+	uint8_t feq_msg[5] = {0x08, 0x02, 0x03, 0x00, 0x32};
+
+	uint16_t pwm_val = 1000;
+	uint8_t pwm_msg[5] = {0x08, 0x01, 0x03, (uint8_t)(pwm_val >> 8), (uint8_t)pwm_val};
+
+	error = i2c_write(i2c_dev, feq_msg, 0, CRICKIT_ADDR);
+	error = i2c_write(i2c_dev, feq_msg, 5, CRICKIT_ADDR);
 
 	while(true) {
 
-		error = i2c_write(i2c_dev, msg, 0, CRICKIT_ADDR);
-		error = i2c_write(i2c_dev, msg, 5, CRICKIT_ADDR);
+		error = i2c_write(i2c_dev, pwm_msg, 0, CRICKIT_ADDR);
+		error = i2c_write(i2c_dev, pwm_msg, 5, CRICKIT_ADDR);
 		printk("I2C error: %d\n", error);
 		k_msleep(1000);
 
