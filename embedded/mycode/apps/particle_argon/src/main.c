@@ -81,7 +81,8 @@ int main(void)
 
 	uint8_t feq_msg[5] = {0x08, 0x02, 0x03, 0x00, 0x32};
 
-	uint16_t pwm_val = 1000;
+	// pwm_val = 5000 pretty much closes it, 6000 half closes, 8000 fully opens
+	uint16_t pwm_val = 6000;
 	uint8_t pwm_msg[5] = {0x08, 0x01, 0x03, (uint8_t)(pwm_val >> 8), (uint8_t)pwm_val};
 
 	error = i2c_write(i2c_dev, feq_msg, 0, CRICKIT_ADDR);
