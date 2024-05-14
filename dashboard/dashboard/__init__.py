@@ -19,7 +19,7 @@ from dashboard.components import (
 )
 
 QUEUES = {}  # global reference to all queues
-TIMEOUT = 60 * 0.2  # Global define for timeout = 1 minutes
+TIMEOUT = 60 * 0.2  # Global define for timeout = 0.2 minutes
 COMPORT = "COM5"
 
 def create_threads():
@@ -133,7 +133,6 @@ def get_eye_tracking():
         time_left = TIMEOUT - (time.time() - state_start_time)
 
         if time_left <= 0:
-            command_queue.append("flash on")
             is_flashing = True
 
     eye_data = {
