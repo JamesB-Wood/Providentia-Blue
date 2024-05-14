@@ -30,7 +30,8 @@
                     {   
                         scaleLabel: {
                             display: true,
-                            labelString: "Ammount in Air (ppm)"
+                            labelString: "Ammount in Air (ppm)",
+                            fontColor: "purple",
                         },
                         id: "y1",
                         position: "right",
@@ -38,6 +39,7 @@
                         ticks: {
                             max: 5000,
                             min: 0,
+                            fontColor: "purple",
                         },
                     },
                     {
@@ -71,6 +73,24 @@
                             max: 40,
                             min: -10,
                             fontColor: "red",
+                        },
+                        gridLines: {
+                            display: false,
+                        },
+                    },
+                    {   
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Ammount in Air (ppb)",
+                            fontColor: "blue",
+                        },
+                        id: "y4",
+                        position: "right",
+                        stacked: false,
+                        ticks: {
+                            max: 5000,
+                            min: 0,
+                            fontColor: "blue",
                         },
                         gridLines: {
                             display: false,

@@ -2,13 +2,15 @@ from collections import deque
 from dataclasses import dataclass
 import serial
 import json
+import time
+from math import exp, sqrt
 
 INIT_GRAPH_DATA = [
     {
         "label": "tvoc",
         "data": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         "borderColor": "blue",
-        "yAxisID": "y1",
+        "yAxisID": "y4",
     },
     {
         "label": "co2",
@@ -76,6 +78,12 @@ class ControlState:
 
 flower_state = ControlState()
 
+def scale_vector_sigmoid(x, a, m):
+    """
+    Scale the sensor vector x around mean desired value m 
+    adjusted with slope a
+    """
+    return ((-2/(1 + exp(a*(x-m)))) + 2)
 
 def calculate_flower_state (
     data_queue: deque[SensorState], command_queue: deque[ControlState], is_flashing: bool
@@ -87,7 +95,14 @@ def calculate_flower_state (
     # brightness
     new_state.brightness = max(0, round((1 - (abs(data_queue[-1].average_ir_temp - 31))/10) * 100))
 
-    # perform filtering on the data
+    # scale sensor vectors
+    u_tvoc = scale_vector_sigmoid(data_queue[-1].tvoc, 0.005, 0)
+    u_c02 = scale_vector_sigmoid(data_queue[-1].co2, 0.005, 400)
+    u_humidity = scale_vector_sigmoid(data_queue[-1].humidity,0.075, 40)
+    u_temp = scale_vector_sigmoid(data_queue[-1].temp, 0.1, 25)
+
+    radius = sqrt((u_tvoc**2)+(u_c02**2)+(u_humidity**2)+(u_temp**2))
+    new_state.openness = max(0, round((1 - (abs(0.5*(radius - 2))))* 100))
 
     # send command to queue if required
     if new_state != flower_state:
@@ -98,12 +113,17 @@ def calculate_flower_state (
     return flower_state
 
 
+def calibrate_temp(state: SensorState) -> SensorState:
+
+    return state
+
 def start_sensor_thread(
     data_queue: deque[SensorState], command_queue: deque[ControlState], port: str
 ):
     """
     UART thread for reading and writing
     """
+
     # init data in data queue
     data_queue.append(SensorState([
         [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0,],
@@ -127,20 +147,24 @@ def start_sensor_thread(
         line = ser.readline()
 
         if len(line) == 0:
+            # remove data if none for 5s
             continue
 
         json_data = json.loads(line.decode())
+        data_time = time.time()
 
         grid_data = json_data["ir_grid"]
         grid_data = [item/100 for item in grid_data] 
 
         data = SensorState(
             [grid_data[i:i + 8] for i in range(0, len(grid_data), 8)],
-            json_data["tvoc"]/1000,
+            json_data["tvoc"],
             json_data["co2"],
             json_data["humidity"]/10,
             json_data["temp"]/10,
             round(sum(grid_data)/len(grid_data), 1),
         )
+
+        data = calibrate_temp(data)
         data_queue.append(data)
         data_queue.popleft() #remove previous val
