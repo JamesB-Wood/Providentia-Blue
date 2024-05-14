@@ -3,7 +3,7 @@
 #include <zephyr/kernel.h> // Include Zephyr kernel header for threading
 
 #define UART_PRIORITY 7      // Priority level for UART thread
-#define SCAN_ADV_PRIORITY 6  // Priority level for scan/advertise thread
+#define SCAN_ADV_PRIORITY 7  // Priority level for scan/advertise thread
 #define SEND_JSON_PRIORITY 7 // Priority level for JSON sending thread
 #define STACKSIZE 2048       // Stack size for each thread
 
