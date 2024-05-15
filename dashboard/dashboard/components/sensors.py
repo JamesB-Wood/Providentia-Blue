@@ -1,9 +1,15 @@
 from collections import deque
 from dataclasses import dataclass
+from filterpy.kalman import KalmanFilter
+from filterpy.common import Q_discrete_white_noise
+from math import exp, sqrt
+
 import serial
 import json
 import time
-from math import exp, sqrt
+import numpy as np
+
+filter = None
 
 INIT_GRAPH_DATA = [
     {
@@ -114,7 +120,39 @@ def calculate_flower_state (
 
 
 def calibrate_temp(state: SensorState) -> SensorState:
+    global filter
 
+    #init kalman filter
+    if filter == None:
+        filter = KalmanFilter (dim_x=2, dim_z=1)
+        filter.x = np.array([state.temp, 0.]) #initial position and velocity
+        filter.F = np.array([[1.,1.], [0.,1.]]) #transition matrix
+        filter.H = np.array([[1.,0.]]) #measurement function
+        filter.P *= 1. #covalence matrix time uncertainty
+        filter.R = 5 #measurement noise
+        filter.Q = Q_discrete_white_noise(dim=2, dt=0.1, var=0.13)
+
+    #pass in temp
+    filter.predict()
+    filter.update(state.temp)
+
+    prob = max(0, round((1 - (abs(state.average_ir_temp - 31))/10) * 100)) #probability of human in frame
+
+    # only if 90% sure of human don't use temp to predict
+    if prob > 90:
+        state.temp = filter.x
+        return state
+    
+    #use a normal distribution function multiplied by an inverted human detection algorithm
+    prob_vals = [[min(1, abs(x - 31)/5) * exp(-0.5*(((x-31)/31)**2)) for x in row] for row in state.ir_vals]
+    
+    #use highest probability pixel/s for background temp
+
+    #pass in ir grid
+    filter.predict()
+    filter.update(z)
+
+    state.temp = filter.x
     return state
 
 def start_sensor_thread(

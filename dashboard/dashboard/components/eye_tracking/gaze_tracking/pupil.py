@@ -28,11 +28,15 @@ class Pupil(object):
             A frame with a single element representing the iris
         """
         kernel = np.ones((3, 3), np.uint8)
-        new_frame = cv2.bilateralFilter(eye_frame, 10, 15, 15)
-        new_frame = cv2.erode(new_frame, kernel, iterations=3)
-        new_frame = cv2.threshold(new_frame, threshold, 255, cv2.THRESH_BINARY)[1]
+        #TODO ERROR HANDLE
+        try:
+            new_frame = cv2.bilateralFilter(eye_frame, 10, 15, 15)
+            new_frame = cv2.erode(new_frame, kernel, iterations=3)
+            new_frame = cv2.threshold(new_frame, threshold, 255, cv2.THRESH_BINARY)[1]
 
-        return new_frame
+            return new_frame
+        except:
+            pass
 
     def detect_iris(self, eye_frame):
         """Detects the iris and estimates the position of the iris by
@@ -41,14 +45,17 @@ class Pupil(object):
         Arguments:
             eye_frame (numpy.ndarray): Frame containing an eye and nothing else
         """
-        self.iris_frame = self.image_processing(eye_frame, self.threshold)
-
-        contours, _ = cv2.findContours(self.iris_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[-2:]
-        contours = sorted(contours, key=cv2.contourArea)
-
         try:
-            moments = cv2.moments(contours[-2])
-            self.x = int(moments['m10'] / moments['m00'])
-            self.y = int(moments['m01'] / moments['m00'])
-        except (IndexError, ZeroDivisionError):
+            self.iris_frame = self.image_processing(eye_frame, self.threshold)
+
+            contours, _ = cv2.findContours(self.iris_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[-2:]
+            contours = sorted(contours, key=cv2.contourArea)
+
+            try:
+                moments = cv2.moments(contours[-2])
+                self.x = int(moments['m10'] / moments['m00'])
+                self.y = int(moments['m01'] / moments['m00'])
+            except (IndexError, ZeroDivisionError):
+                pass
+        except: 
             pass
