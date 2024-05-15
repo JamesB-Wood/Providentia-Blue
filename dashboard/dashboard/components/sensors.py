@@ -128,9 +128,9 @@ def calibrate_temp(state: SensorState) -> SensorState:
         filter.x = np.array([state.temp, 0.]) #initial position and velocity
         filter.F = np.array([[1.,1.], [0.,1.]]) #transition matrix
         filter.H = np.array([[1.,0.]]) #measurement function
-        filter.P *= 1. #covalence matrix time uncertainty
-        filter.R = 5 #measurement noise
-        filter.Q = Q_discrete_white_noise(dim=2, dt=0.1, var=0.13)
+        filter.P *= 5. #covalence matrix time uncertainty
+        filter.R = 1 #measurement noise
+        filter.Q = Q_discrete_white_noise(dim=2, dt=0.5, var=0.13)
 
     #pass in temp
     filter.predict()
@@ -140,17 +140,19 @@ def calibrate_temp(state: SensorState) -> SensorState:
 
     # only if 90% sure of human don't use temp to predict
     if prob > 90:
-        state.temp = filter.x
+        state.temp = filter.x[0]
         return state
     
     #use a normal distribution function multiplied by an inverted human detection algorithm
     prob_vals = [[min(1, abs(x - 31)/5) * exp(-0.5*(((x-31)/31)**2)) for x in row] for row in state.ir_vals]
     
     #use highest probability pixel/s for background temp
-
-    #pass in ir grid
-    filter.predict()
-    filter.update(z)
+    for i in range(8):
+        for j in range(8):
+            if prob_vals[i, j] > 0.8:
+                #pass in ir grid
+                filter.predict()
+                filter.update(state.ir_vals[i,j])
 
     state.temp = filter.x
     return state
