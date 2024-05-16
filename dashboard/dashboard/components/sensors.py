@@ -4,6 +4,7 @@ from filterpy.kalman import KalmanFilter
 from filterpy.common import Q_discrete_white_noise
 from math import exp, sqrt
 
+import bisect
 import serial
 import json
 import time
@@ -99,7 +100,7 @@ def calculate_flower_state (
     new_state.flashing = is_flashing
 
     # brightness
-    new_state.brightness = max(0, round((1 - (abs(data_queue[-1].average_ir_temp - 31))/10) * 100))
+    new_state.brightness = max(0, round((1 - (abs(data_queue[-1].average_ir_temp - 32.5))/14) * 100))
 
     # scale sensor vectors
     u_tvoc = scale_vector_sigmoid(data_queue[-1].tvoc, 0.005, 0)
@@ -119,9 +120,10 @@ def calculate_flower_state (
     return flower_state
 
 
+ir_cache = [] 
 def calibrate_temp(state: SensorState) -> SensorState:
     global filter
-
+    global ir_cache
     #init kalman filter
     if filter == None:
         filter = KalmanFilter (dim_x=2, dim_z=1)
@@ -136,25 +138,35 @@ def calibrate_temp(state: SensorState) -> SensorState:
     filter.predict()
     filter.update(state.temp)
 
-    prob = max(0, round((1 - (abs(state.average_ir_temp - 31))/10) * 100)) #probability of human in frame
+    prob = max(0, round((1 - (abs(state.average_ir_temp - 32.5))/14) * 100)) #probability of human in frame
 
-    # only if 90% sure of human don't use temp to predict
-    if prob > 90:
-        state.temp = filter.x[0]
+    # only if 80% sure of human don't use temp to predict
+    if prob > 80:
+        for item in ir_cache:
+            #pass in ir grid
+            filter.predict()
+            filter.update(item[1])
+        state.temp = round(filter.x[0],1)
         return state
     
     #use a normal distribution function multiplied by an inverted human detection algorithm
-    prob_vals = [[min(1, abs(x - 31)/5) * exp(-0.5*(((x-31)/31)**2)) for x in row] for row in state.ir_vals]
+    prob_vals = [[min(1, abs(x - 31)/8) * exp(-0.5*(((x-31)/31)**2)) for x in row] for row in state.ir_vals]
     
     #use highest probability pixel/s for background temp
+    possible_vals = []
     for i in range(8):
         for j in range(8):
-            if prob_vals[i, j] > 0.8:
-                #pass in ir grid
-                filter.predict()
-                filter.update(state.ir_vals[i,j])
+            if prob_vals[i][j] > 0.85:
+                bisect.insort(possible_vals, [prob_vals[i][j], state.ir_vals[i][j]], key=lambda x: -x[0])
+                
+    for item in possible_vals[:3]:
+        #pass in ir grid
+        filter.predict()
+        filter.update(item[1])
 
-    state.temp = filter.x
+    #cache results
+    ir_cache = possible_vals[:3]
+    state.temp = round(filter.x[0],1)
     return state
 
 def start_sensor_thread(
